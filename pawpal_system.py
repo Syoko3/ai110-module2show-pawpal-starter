@@ -1,157 +1,159 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Any
+from enum import Enum
+from typing import Optional
 
 
-# ─────────────────────────────────────────────
-# PetCareTask
-# ─────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Enum
+# ---------------------------------------------------------------------------
 
-@dataclass
-class PetCareTask:
-    task_id: str
-    name: str
-    category: str           # e.g. "walk", "feeding", "meds", "grooming"
-    duration_minutes: int
-    priority: int           # 1 (highest) – 5 (lowest)
-    preferred_time: str     # e.g. "08:00"
-    is_recurring: bool = False
-    notes: str = ""
-
-    def add_task(self) -> None:
-        """Register/persist this task (hook for storage layer)."""
-        pass
-
-    def edit_task(self, field: str, value: Any) -> None:
-        """Update a single field by name."""
-        pass
-
-    def delete_task(self) -> None:
-        """Remove this task (hook for storage layer)."""
-        pass
-
-    def get_task_details(self) -> dict:
-        """Return a dict summary of this task."""
-        pass
+class Priority(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
 
 
-# ─────────────────────────────────────────────
-# ScheduledTask  (a PetCareTask placed in time)
-# ─────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Dataclasses
+# ---------------------------------------------------------------------------
 
 @dataclass
 class ScheduledTask:
-    task: PetCareTask
-    start_time: str         # e.g. "09:00"
-    end_time: str           # e.g. "09:30"
-    status: str = "pending" # "pending" | "complete" | "skipped"
+    task: Task
+    start_time: str
+    end_time: str
+    rationale_note: str = ""
 
-    def mark_complete(self) -> None:
-        """Mark this scheduled task as done."""
-        pass
-
-    def reschedule(self, new_time: str) -> None:
-        """Move the task to a new start time and recalculate end_time."""
-        pass
-
-
-# ─────────────────────────────────────────────
-# PetInfo
-# ─────────────────────────────────────────────
 
 @dataclass
-class PetInfo:
-    owner_name: str
-    owner_email: str
-    pet_name: str
-    pet_type: str           # e.g. "dog", "cat"
-    breed: str
-    age: int
-    weight: float
-    medical_notes: list[str] = field(default_factory=list)
+class Schedule:
+    schedule_id: str
+    date: date
+    scheduled_tasks: list[ScheduledTask] = field(default_factory=list)
+    reasoning_summary: str = ""
+    total_duration: int = 0  # minutes
+
+    def add_entry(self, task: ScheduledTask) -> None:
+        pass
+
+    def remove_entry(self, task_id: str) -> None:
+        pass
 
     def get_summary(self) -> str:
-        """Return a human-readable summary of owner + pet info."""
         pass
 
-    def update_info(self, field: str, value: Any) -> None:
-        """Update a single field by name."""
-        pass
-
-
-# ─────────────────────────────────────────────
-# Constraints
-# ─────────────────────────────────────────────
 
 @dataclass
-class Constraints:
-    total_time_available: int       # minutes
-    owner_wake_time: str            # e.g. "07:00"
-    owner_sleep_time: str           # e.g. "22:00"
-    blocked_time_slots: list[str] = field(default_factory=list)
-    max_tasks_per_day: int = 10
-    owner_preferences: list[str] = field(default_factory=list)
-    priority_threshold: int = 3     # tasks with priority > threshold may be skipped
+class Task:
+    task_id: str
+    title: str
+    description: str
+    duration: int              # minutes
+    priority: Priority
+    frequency: str             # e.g. "daily", "weekly"
+    preferred_time: str        # e.g. "morning", "evening"
+    is_completed: bool = False
+    pet: Optional[Pet] = None
 
-    def set_time_window(self, start: str, end: str) -> None:
-        """Set the owner's active time window for the day."""
+    def mark_complete(self) -> None:
         pass
 
-    def add_blocked_slot(self, slot: str) -> None:
-        """Add a time slot during which no tasks should be scheduled."""
+    def mark_incomplete(self) -> None:
         pass
 
-    def add_preference(self, pref: str) -> None:
-        """Append an owner preference (e.g. 'no tasks before 8am')."""
+    def edit(self, field: str, value: object) -> None:
         pass
 
-    def is_task_allowed(self, task: PetCareTask) -> bool:
-        """Return True if the task passes all constraint checks."""
+    def get_remaining_time(self) -> int:
         pass
 
-    def get_available_minutes(self) -> int:
-        """Calculate total schedulable minutes after blocked slots."""
-        pass
-
-
-# ─────────────────────────────────────────────
-# DailySchedule
-# ─────────────────────────────────────────────
 
 @dataclass
-class DailySchedule:
-    schedule_date: date
-    scheduled_tasks: list[ScheduledTask] = field(default_factory=list)
-    skipped_tasks: list[PetCareTask] = field(default_factory=list)
-    reasoning: str = ""
+class Pet:
+    pet_id: str
+    name: str
+    species: str
+    breed: str
+    age: int
+    medical_notes: str = ""
+    tasks: list[Task] = field(default_factory=list)
+    owner: Optional[Owner] = None
 
-    def generate_schedule(
-        self, tasks: list[PetCareTask], constraints: Constraints
+    def add_task(self, task: Task) -> None:
+        pass
+
+    def remove_task(self, task_id: str) -> None:
+        pass
+
+    def update_info(self, field: str, value: str) -> None:
+        pass
+
+    def get_tasks(self) -> list[Task]:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Regular classes
+# ---------------------------------------------------------------------------
+
+class Owner:
+    def __init__(
+        self,
+        owner_id: str,
+        name: str,
+        email: str,
+        phone: str,
+        preferred_schedule_time: str,
+        daily_time_available: int,          # minutes
+        preferences: Optional[list[str]] = None,
     ) -> None:
-        """
-        Main entry point. Filter tasks through constraints, prioritize,
-        fit into the time window, and populate scheduled_tasks / skipped_tasks.
-        """
+        self.owner_id = owner_id
+        self.name = name
+        self.email = email
+        self.phone = phone
+        self.preferred_schedule_time = preferred_schedule_time
+        self.daily_time_available = daily_time_available
+        self.preferences: list[str] = preferences or []
+        self.pets: list[Pet] = []
+
+    def add_pet(self, pet: Pet) -> None:
         pass
 
-    def prioritize_tasks(self, tasks: list[PetCareTask]) -> list[PetCareTask]:
-        """Return tasks sorted by priority (and any other ordering rules)."""
+    def remove_pet(self, pet_id: str) -> None:
         pass
 
-    def fit_tasks_to_window(
-        self, tasks: list[PetCareTask], constraints: Constraints
-    ) -> list[ScheduledTask]:
-        """Assign start/end times to tasks that fit within available time."""
+    def update_preferences(self, prefs: list[str]) -> None:
         pass
 
-    def display_plan(self) -> str:
-        """Return a formatted, human-readable daily plan."""
+    def get_schedule(self) -> Schedule:
+        pass
+
+
+class Scheduler:
+    def __init__(self, scheduler_id: str, owner: Owner) -> None:
+        self.scheduler_id = scheduler_id
+        self.owner = owner
+        self.task_queue: list[Task] = []
+        self.total_time_available: int = owner.daily_time_available
+        self.generated_schedule: Optional[Schedule] = None
+
+    def generate_schedule(self) -> Schedule:
+        pass
+
+    def prioritize_tasks(self) -> list[Task]:
+        pass
+
+    def apply_constraints(self) -> list[Task]:
         pass
 
     def explain_reasoning(self) -> str:
-        """Return a plain-English explanation of scheduling decisions."""
         pass
 
-    def export_schedule(self) -> dict:
-        """Serialize the schedule to a dict (for JSON / Streamlit state)."""
+    def display_plan(self) -> None:
+        pass
+
+    def adjust_schedule(self, task_id: str) -> None:
         pass

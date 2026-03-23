@@ -9,7 +9,7 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
---- My initial UML design is 
+--- My initial UML design contains 
 --- I included 
 
 **b. Design changes**
