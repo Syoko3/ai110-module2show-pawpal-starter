@@ -9,15 +9,15 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
---- My initial UML design contains 
---- I included 
+--- My initial UML design shows the relationship of the classes. Owner owns the Pet, Pet has the Task, Scheduler manages the Owner and generates the Schedule, Schedule contains ScheduledTask that wraps the Task, and Task uses the Priority to sort the tasks based on the priority.
+--- I included Owner, Pet, Task, Scheduler, Schedule, ScheduledTask, and Priority. Owner class holds personal info and scheduling preferences. Pet class is linked back to its Owner and carries its own list of tasks. Task class contains required duration and priority, with frequency, preferredTime, and whether it is completed or not for tracking. Scheduler class pulls in the Owner's constraints and generates the plan. It also explains the reasoning of the plan to surface the logic behind the generated schedule. Schedule class holds the ordered list of scheduled items and a reasoningSummary string. ScheduledTask class wraps a Task with startTime, endTime, and rationalNote for explanation that why it was placed there. Priority class is the enumeration to keep comparisons consistent. It contains LOW, MEDIUM, HIGH, and CRITICAL.
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
----
+--- My design changed during implementation. I added Scheduler.load_tasks() to collect the tasks from Owner --> Pet --> Task into the task_queue because the scheduler needs to collect all tasks into one list before any scheduling work. I also added add_entry() to avoid any other tasks to be scheduled at the same time as the current task.
 
 ## 2. Scheduling Logic and Tradeoffs
 
