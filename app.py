@@ -1,4 +1,6 @@
 import streamlit as st
+from pawpal_system import Owner, Pet, Task, Priority, Scheduler
+import uuid
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 
@@ -74,15 +76,48 @@ st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
-    st.markdown(
-        """
-Suggested approach:
-1. Design your UML (draft).
-2. Create class stubs (no logic).
-3. Implement scheduling behavior.
-4. Connect your scheduler here and display results.
-"""
-    )
+    # Replaced placeholders with the calls to the methods wrote in main.py
+    if not st.session_state.tasks:
+        st.error("Please add at least one task first!")
+    else:
+        current_owner = Owner(
+            owner_id="O-001",
+            name=owner_name,
+            email="contact@example.com",
+            phone="555-0199",
+            preferred_schedule_time="morning",
+            daily_time_available=120
+        )
+
+        current_pet = Pet(
+            pet_id="P-001", 
+            name=pet_name, 
+            species=species, 
+            breed="Mixed", 
+            age=2
+        )
+        current_owner.add_pet(current_pet)
+
+        for t in st.session_state.tasks:
+            pri_enum = Priority[t["priority"].upper()]
+            
+            new_task = Task(
+                task_id=str(uuid.uuid4())[:8],
+                title=t["title"],
+                description="User added task",
+                duration=t["duration_minutes"],
+                priority=pri_enum,
+                frequency="daily",
+                preferred_time="morning"
+            )
+            current_pet.add_task(new_task)
+        
+        planner = Scheduler(str(uuid.uuid4()), current_owner)
+        daily_plan = planner.generate_schedule()
+
+        st.success("🗓️ Schedule Successfully Generated!")
+
+        st.text_area("Daily Summary", value=daily_plan.get_summary(), height=400)
+
+        with st.expander("Why was this schedule chosen?"):
+            st.markdown(planner.explain_reasoning())

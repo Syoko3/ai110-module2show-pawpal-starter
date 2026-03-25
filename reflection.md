@@ -26,14 +26,14 @@
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
---- 
+--- My scheduler considers the priority first, then considers the time. I decided that priority mattered the most because pet care involves some health tasks, which they need to be finished first.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
----
+--- One tradeoff my scheduler makes is building the next task occurrence for recurring tasks and attaching it to the same pet. This tradeoff is reasonable for this scenario because the app is a lightweight pet care app, and this version has better readability and has less repeated logic.
 
 ## 3. AI Collaboration
 

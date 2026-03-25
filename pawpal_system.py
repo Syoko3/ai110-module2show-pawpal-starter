@@ -61,6 +61,7 @@ class Schedule:
     date: date
     scheduled_tasks: list[ScheduledTask] = field(default_factory=list)
     reasoning_summary: str = ""
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def total_duration(self) -> int:
@@ -142,16 +143,54 @@ class Task:
     priority: Priority
     frequency: str             # e.g. "daily", "weekly"
     preferred_time: str        # e.g. "morning", "evening"
+    time: str = "08:00"        # scheduled or target time in HH:MM format
+    due_date: date = field(default_factory=date.today)
     is_completed: bool = False
     pet: Optional[Pet] = None
 
-    def mark_complete(self) -> None:
-        """Set is_completed to True to mark this task as done."""
+    def mark_complete(self) -> Optional[Task]:
+        """Mark this task complete and return the next recurring task if one is created.
+
+        Daily tasks create a new copy due tomorrow, weekly tasks create a new copy
+        due one week from today, and non-recurring tasks return None.
+        """
+        if self.is_completed:
+            return None
+
         self.is_completed = True
+        return self.create_next_occurrence()
 
     def mark_incomplete(self) -> None:
         """Reset is_completed to False to reopen this task."""
         self.is_completed = False
+
+    def create_next_occurrence(self) -> Optional[Task]:
+        """Build the next task occurrence for recurring tasks and attach it to the same pet."""
+        recurrence_offsets = {
+            "daily": timedelta(days=1),
+            "weekly": timedelta(weeks=1),
+        }
+
+        offset = recurrence_offsets.get(self.frequency.lower())
+        if offset is None:
+            return None
+
+        next_task = Task(
+            task_id=str(uuid.uuid4())[:8],
+            title=self.title,
+            description=self.description,
+            duration=self.duration,
+            priority=self.priority,
+            frequency=self.frequency,
+            preferred_time=self.preferred_time,
+            time=self.time,
+            due_date=date.today() + offset,
+        )
+
+        if self.pet is not None:
+            self.pet.add_task(next_task)
+
+        return next_task
 
     def edit(self, field: str, value: object) -> None:
         """Update a single task field by name, raising AttributeError if unknown."""
@@ -270,6 +309,67 @@ class Scheduler:
             if not task.is_completed
         ]
 
+    def filter_tasks(
+        self,
+        is_completed: Optional[bool] = None,
+        pet_name: Optional[str] = None,
+    ) -> list[tuple[Pet, Task]]:
+        """Return owner tasks filtered by completion status, pet name, or both.
+
+        This helper searches across every pet owned by the current owner and returns
+        matching `(pet, task)` pairs so the caller keeps both the task and its pet context.
+        """
+        filtered_tasks = self.owner.all_tasks()
+
+        if is_completed is not None:
+            filtered_tasks = [
+                (pet, task)
+                for pet, task in filtered_tasks
+                if task.is_completed == is_completed
+            ]
+
+        if pet_name is not None:
+            normalized_name = pet_name.strip().lower()
+            filtered_tasks = [
+                (pet, task)
+                for pet, task in filtered_tasks
+                if pet.name.lower() == normalized_name
+            ]
+
+        return filtered_tasks
+
+    def detect_time_conflicts(
+        self,
+        task_pairs: Optional[list[tuple[Pet, Task]]] = None,
+    ) -> list[str]:
+        """Return warning messages for incomplete tasks that share the same HH:MM time.
+
+        This is a lightweight conflict check: instead of raising an exception, it
+        groups tasks by their `time` value and reports overlaps as warning strings.
+        """
+        pairs = task_pairs if task_pairs is not None else self.owner.all_tasks()
+        time_buckets: dict[str, list[tuple[Pet, Task]]] = {}
+
+        for pet, task in pairs:
+            if task.is_completed:
+                continue
+            time_buckets.setdefault(task.time, []).append((pet, task))
+
+        warnings: list[str] = []
+        for time_value, conflicts in sorted(time_buckets.items()):
+            if len(conflicts) < 2:
+                continue
+
+            task_labels = ", ".join(
+                f"{task.title} [{pet.name}]"
+                for pet, task in conflicts
+            )
+            warnings.append(
+                f"Warning: {len(conflicts)} tasks are set for {time_value}: {task_labels}."
+            )
+
+        return warnings
+
     def prioritize_tasks(self) -> list[tuple[Pet, Task]]:
         """Sort task_queue by priority descending, using preferred_time slot as tiebreaker."""
         slot_order = list(_TIME_SLOT_START.keys())
@@ -299,6 +399,14 @@ class Scheduler:
                 ordered.append(pair)
                 total += task.duration
         return ordered
+    
+    def sort_by_time(self, tasks: list[Task]) -> list[Task]:
+        """Return tasks sorted by their `time` field in HH:MM order.
+
+        The method parses each task's time string with `datetime.strptime` so the
+        ordering is chronological rather than simple alphabetical sorting.
+        """
+        return sorted(tasks, key=lambda task: datetime.strptime(task.time, "%H:%M"))
 
     def generate_schedule(self) -> Schedule:
         """Run the full pipeline (load → prioritise → constrain → slot) and return a Schedule."""
@@ -308,6 +416,7 @@ class Scheduler:
 
         schedule = Schedule(schedule_id=str(uuid.uuid4()), date=today)
         slot_cursors: dict[str, datetime] = {}
+        schedule.warnings = self.detect_time_conflicts(constrained)
 
         for pet, task in constrained:
             slot = task.preferred_time.lower()
