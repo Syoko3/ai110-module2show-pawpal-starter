@@ -41,3 +41,29 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+### Testing PawPal+
+
+```bash
+python -m pytest
+```
+
+Tests:
+- Task completion test: mark_complete() should flip is_completed from False to True
+    - Confidence Level: 5
+- Task addition test: Adding a task to a pet should increase its task list length by 1
+    - Confidence Level: 5
+- Filtering tasks by completion status test: Scheduler.filter_tasks() should return only tasks matching completion state
+    - Confidence Level: 5
+- Filtering tasks by pet name test: Scheduler.filter_tasks() should return only tasks for the named pet
+    - Confidence Level: 5
+- Daily task test: Completing a daily task should create a new incomplete task due tomorrow
+    - Confidence Level: 5
+- Sort by time test: Scheduler.sort_by_time() should order the tasks from earliest to latest HH:MM
+    - Confidence Level: 5
+- Weekly task test: Completing a weekly task should create a new incomplete task due next week
+    - Confidence Level: 5
+- Time conflicts warning test: Scheduler.detect_time_conflicts() should warn when tasks share the same time
+    - Confidence Level: 5
+- Time conflicts flags test: Scheduler.detect_time_conflicts() should flag multiple incomplete tasks at the same time
+    - Confidence Level: 5

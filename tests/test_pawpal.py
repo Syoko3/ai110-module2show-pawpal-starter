@@ -114,6 +114,22 @@ def test_mark_complete_creates_next_daily_task(sample_pet, sample_task):
     assert next_task.due_date == date.today() + timedelta(days=1)
 
 
+def test_sort_by_time_returns_tasks_in_chronological_order():
+    """Scheduler.sort_by_time() should order tasks from earliest to latest HH:MM."""
+    owner = Owner("O1", "Jordan", "jordan@example.com", "555-0101", "morning", 120)
+    pet = Pet("P1", "Buddy", "Canine", "Labrador", 5)
+    owner.add_pet(pet)
+
+    midday_task = Task("T1", "Lunch", "Midday meal", 15, Priority.MEDIUM, "daily", "afternoon", "12:30")
+    early_task = Task("T2", "Breakfast", "Morning meal", 10, Priority.HIGH, "daily", "morning", "07:15")
+    late_task = Task("T3", "Evening walk", "Night exercise", 20, Priority.LOW, "daily", "evening", "18:45")
+
+    scheduler = Scheduler("S1", owner)
+    sorted_tasks = scheduler.sort_by_time([midday_task, late_task, early_task])
+
+    assert sorted_tasks == [early_task, midday_task, late_task]
+
+
 def test_mark_complete_creates_next_weekly_task(sample_pet):
     """Completing a weekly task should create a new incomplete task due next week."""
     weekly_task = Task(
@@ -155,3 +171,23 @@ def test_detect_time_conflicts_returns_warning():
     assert "08:00" in warnings[0]
     assert "Morning walk [Buddy]" in warnings[0]
     assert "Breakfast [Mochi]" in warnings[0]
+
+
+def test_detect_time_conflicts_flags_duplicate_times():
+    """Scheduler.detect_time_conflicts() should flag multiple incomplete tasks at the same time."""
+    owner = Owner("O1", "Jordan", "jordan@example.com", "555-0101", "morning", 120)
+    pet = Pet("P1", "Buddy", "Canine", "Labrador", 5)
+    owner.add_pet(pet)
+
+    breakfast = Task("T1", "Breakfast", "Morning feeding", 10, Priority.HIGH, "daily", "morning", "08:30")
+    meds = Task("T2", "Medicine", "Morning meds", 5, Priority.CRITICAL, "daily", "morning", "08:30")
+    pet.add_task(breakfast)
+    pet.add_task(meds)
+
+    scheduler = Scheduler("S1", owner)
+    warnings = scheduler.detect_time_conflicts()
+
+    assert len(warnings) == 1
+    assert "08:30" in warnings[0]
+    assert "Breakfast [Buddy]" in warnings[0]
+    assert "Medicine [Buddy]" in warnings[0]
