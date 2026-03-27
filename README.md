@@ -67,3 +67,18 @@ Tests:
     - Confidence Level: 5
 - Time conflicts flags test: Scheduler.detect_time_conflicts() should flag multiple incomplete tasks at the same time
     - Confidence Level: 5
+
+Features:
+- Priority-based task selection: Tasks are ranked by priority level (CRITICAL, HIGH, MEDIUM, LOW) so the scheduler considers the most important care tasks first.
+- Preferred time-slot scheduling: Each task has a preferred slot (morning, afternoon, evening, night), and the scheduler assigns start times based on those slot buckets.
+- Owner preference-aware planning: The algorithm favors tasks that match the owner’s preferred schedule time before considering tasks in other slots.
+- Daily time-budget constraint: The scheduler only includes tasks whose total duration fits within the owner’s available minutes for the day, skipping lower-ranked tasks when needed.
+- Automatic chronological schedule generation: Once tasks are selected, the system builds a day plan by placing tasks sequentially within each time slot and calculating start/end times.
+- Conflict detection for duplicate task times: The system scans incomplete tasks and warns the user when multiple tasks share the same HH:MM time.
+- Task filtering views: Tasks can be filtered by completion status, pet name, or both, making it easier to inspect subsets of the schedule.
+- Time-based task sorting: Tasks can be sorted chronologically using their HH:MM time value instead of simple text ordering.
+- Recurring task generation: Completing a daily or weekly task automatically creates the next occurrence for the following day or next week.
+- Schedule reasoning/explanations: The scheduler generates a reasoning summary showing which tasks were scheduled, which were excluded, and how the time budget affected the final plan.
+- Manual schedule adjustment support: Generated schedules can be updated by removing tasks, changing priorities, or rescheduling tasks while checking for overlaps.
+
+### Demo
