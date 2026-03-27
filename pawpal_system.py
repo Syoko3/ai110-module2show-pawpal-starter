@@ -245,7 +245,7 @@ class Owner:
         daily_time_available: int,
         preferences: Optional[list[str]] = None,
     ) -> None:
-        """Initialise an Owner with contact info, time budget, and an empty pet list."""
+        """Initialize an Owner with contact info, time budget, and an empty pet list."""
         self.owner_id = owner_id
         self.name = name
         self.email = email

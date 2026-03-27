@@ -82,3 +82,6 @@ Features:
 - Manual schedule adjustment support: Generated schedules can be updated by removing tasks, changing priorities, or rescheduling tasks while checking for overlaps.
 
 ### Demo
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)

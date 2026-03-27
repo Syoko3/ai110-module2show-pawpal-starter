@@ -1,8 +1,12 @@
 import streamlit as st
 from pawpal_system import Owner, Pet, Task, Priority, Scheduler
 import uuid
+from datetime import time
+import re
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
+
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def build_task_table(task_pairs):
@@ -45,6 +49,10 @@ def build_schedule_table(schedule):
             }
         )
     return rows
+
+
+def strip_ansi(text):
+    return ANSI_ESCAPE_RE.sub("", text)
 
 st.title("🐾 PawPal+")
 
@@ -99,7 +107,19 @@ with col1:
 with col2:
     duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
 with col3:
-    priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
+    priority = st.selectbox("Priority", ["low", "medium", "high", "critical"], index=2)
+
+col4, col5, col6 = st.columns(3)
+with col4:
+    preferred_slot = st.selectbox(
+        "Preferred Slot",
+        ["morning", "afternoon", "evening", "night"],
+        index=0,
+    )
+with col5:
+    requested_time = st.time_input("Requested Time", value=time(8, 0), step=300)
+with col6:
+    frequency = st.selectbox("Frequency", ["daily", "weekly"], index=0)
 
 if st.button("Add task"):
     st.session_state.tasks.append(
@@ -110,6 +130,9 @@ if st.button("Add task"):
             "title": task_title,
             "duration_minutes": int(duration),
             "priority": priority,
+            "preferred_time": preferred_slot,
+            "time": requested_time.strftime("%H:%M"),
+            "frequency": frequency,
             "is_completed": False,
         }
     )
@@ -192,8 +215,9 @@ if st.button("Generate schedule"):
                 description="User added task",
                 duration=t["duration_minutes"],
                 priority=pri_enum,
-                frequency="daily",
-                preferred_time="morning",
+                frequency=t["frequency"],
+                preferred_time=t["preferred_time"],
+                time=t["time"],
                 is_completed=t["is_completed"],
             )
             current_pet.add_task(new_task)
@@ -254,7 +278,7 @@ if st.button("Generate schedule"):
             st.success("No requested-time conflicts detected.")
 
         with st.expander("Readable Schedule Summary"):
-            st.text(daily_plan.get_summary())
+            st.text(strip_ansi(daily_plan.get_summary()))
 
         with st.expander("Why was this schedule chosen?"):
-            st.text(planner.explain_reasoning())
+            st.text(strip_ansi(planner.explain_reasoning()))

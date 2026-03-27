@@ -30,7 +30,7 @@ def run_test():
     task1 = Task("T1", "Feed the dog", "Care", 10, Priority.HIGH, "daily", "morning", "08:30")
     task2 = Task("T2", "Play with the cat", "Playing", 30, Priority.MEDIUM, "weekly", "morning", "08:30")
     task3 = Task("T3", "Take the dog for a walk", "Exercise", 60, Priority.HIGH, "weekly", "afternoon", "14:00")
-    task4 = Task("T4", "Brush the cat", "Grooming", 15, Priority.LOW, "weekly", "evening", "09:00")
+    task4 = Task("T4", "Brush the cat", "Grooming", 15, Priority.LOW, "weekly", "evening", "21:00")
     task5 = Task("T5", "Give the dog medicine", "Medicine", 5, Priority.CRITICAL, "daily", "morning", "07:45")
     task4.mark_complete()
 
