@@ -42,14 +42,14 @@
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
---- I used the AI tools during this project for 
+--- I used the AI tools during this project for designing the UML diagram, refactoring the logic to the other files, and debugging such as adding task completion status. The prompts or questions that were most helpful were creating a UML design based on brainstormed attributes and methods, and asking for some edge cases to generate some pytest tests based on these cases.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
 
---- I did not accept an AI suggestion as-is for 
+--- I did not accept an AI suggestion as-is for fixing the time conflict issue before adding the requesting time from the user. I evaluated by checking the logic in the detect_time_conflicts() tests in test_pawpal.py and testing the UI. I verified the AI suggestion by adding the requesting time for each task, so that the user can assign the task with their requested time.
 
 ## 4. Testing and Verification
 
@@ -58,14 +58,14 @@
 - What behaviors did you test?
 - Why were these tests important?
 
---- I tested on 
+--- I tested on the task completion status, task addition, filtering tasks, daily and weekly tasks, sorting tasks, and time conflicts. These tests were important because the completed tasks should be moved to the list of completed tasks, and the length of the task list should be increased by 1 after adding the tasks. Filtering tasks should return the tasks with same completion status, and daily and weekly tasks should create a new incomplete task due tomorrow or next week. Sorting the tasks based on time was important because it can generate the sorted schedule based on the time. Detecting time conflicts was important because it can notify the users to show the tasks that have time conflicts.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
 
---- I am very confident that my scheduler works correctly by 
+--- I am very confident that my scheduler works correctly by sorting the tasks by the time and giving the warning for the tasks that have time conflicts. It also generates the schedule for today and schedule summary with reasoning. If I had more time, I would test for the schedule based on the species type.
 
 ## 5. Reflection
 
@@ -73,16 +73,16 @@
 
 - What part of this project are you most satisfied with?
 
---- I am most satisfied with 
+--- I am most satisfied with implementing the logic from pawpal_system.py to app.py using AI tools to make the UI usable and reflecting the logic from pawpal_system.py.
 
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
---- I would improve 
+--- I would improve or redesign on removing id numbers from the owner and pet. I think these id numbers are not important for the UI because the id numbers generates randomly and the UI doesn't ask about the id numbers, just asking for the owner's name and pet's name.
 
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
 
---- 
+--- One important thing I learned about designing systems or working with AI on this project was to create an initial UML design using the Mermaid.js, then implement the skeleton of the classes based on the UML design. This could be helpful for the future because it can generate tests and debug easier based on the tests to make a smarter UI.

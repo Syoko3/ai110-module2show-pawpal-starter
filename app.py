@@ -9,12 +9,16 @@ st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
-def build_task_table(task_pairs):
+def build_task_table(task_pairs, time_overrides=None):
     rows = []
     for pet, task in task_pairs:
         rows.append(
             {
-                "Time": task.time,
+                "Time": (
+                    time_overrides.get(task.task_id, task.time)
+                    if time_overrides is not None
+                    else task.time
+                ),
                 "Pet": pet.name,
                 "Task": task.title,
                 "Priority": task.priority.name.title(),
@@ -27,11 +31,17 @@ def build_task_table(task_pairs):
 
 
 def build_scheduled_task_pairs(schedule):
-    scheduled_pairs = []
-    for entry in sorted(schedule.scheduled_tasks, key=lambda item: item.start_time):
-        entry.task.time = entry.start_time.strftime("%H:%M")
-        scheduled_pairs.append((entry.pet, entry.task))
-    return scheduled_pairs
+    return [
+        (entry.pet, entry.task)
+        for entry in sorted(schedule.scheduled_tasks, key=lambda item: item.start_time)
+    ]
+
+
+def build_scheduled_time_map(schedule):
+    return {
+        entry.task.task_id: entry.start_time.strftime("%H:%M")
+        for entry in schedule.scheduled_tasks
+    }
 
 
 def build_schedule_table(schedule):
@@ -225,6 +235,7 @@ if st.button("Generate schedule"):
         planner = Scheduler(str(uuid.uuid4()), current_owner)
         daily_plan = planner.generate_schedule()
         scheduled_pairs = build_scheduled_task_pairs(daily_plan)
+        scheduled_time_map = build_scheduled_time_map(daily_plan)
         sorted_pairs = scheduled_pairs
         pending_pairs = [(pet, task) for pet, task in scheduled_pairs if not task.is_completed]
         completed_pairs = planner.filter_tasks(is_completed=True)
@@ -249,14 +260,14 @@ if st.button("Generate schedule"):
         with view1:
             st.markdown("**Sorted by Time**")
             if sorted_pairs:
-                st.table(build_task_table(sorted_pairs))
+                st.table(build_task_table(sorted_pairs, scheduled_time_map))
             else:
                 st.warning("No tasks available to sort.")
 
         with view2:
             st.markdown("**Pending Tasks Only**")
             if pending_pairs:
-                st.table(build_task_table(pending_pairs))
+                st.table(build_task_table(pending_pairs, scheduled_time_map))
             else:
                 st.success("Everything is completed.")
 
